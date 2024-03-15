@@ -9,11 +9,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.jsearch.indexer.Indexer;
+
 public class FileCrawler implements FileVisitor<Path> {
-  private Map<String, Set<String>> invertedIndex;
+
+  private Indexer indexer;
 
   public FileCrawler() {
-    invertedIndex = new HashMap<>();
+    indexer = new Indexer();
   }
 
   @Override
@@ -23,7 +26,7 @@ public class FileCrawler implements FileVisitor<Path> {
 
   @Override
   public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-    indexFile(file);
+    if (isReadable(file)) this.indexer.index(file.toFile());
     return FileVisitResult.CONTINUE;
   }
 
@@ -38,9 +41,7 @@ public class FileCrawler implements FileVisitor<Path> {
     return FileVisitResult.CONTINUE;
   }
 
-  private void indexFile(Path filePath) {
-  }
-
-  public void writeIndexToFile(String indexPath) {
+  private boolean isReadable(Path file) {
+    return true;
   }
 }
