@@ -2,16 +2,19 @@ package com.jsearch.crawler;
 
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.FileVisitor;
+import java.nio.file.Files;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.List;
+
 
 import com.jsearch.indexer.Indexer;
 
 public class FileCrawler implements FileVisitor<Path> {
+
+  List<String> supportedFileTypes = Arrays.asList("text", "pdf", "doc", "docx", "ppt", "xls", "xlsx", "csv");
 
   private Indexer indexer;
 
@@ -25,14 +28,18 @@ public class FileCrawler implements FileVisitor<Path> {
   }
 
   @Override
-  public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-    if (isReadable(file)) this.indexer.index(file.toFile());
+  public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+    String fileType = getFileType(path);
+    if (fileType != null && supportedFileTypes.contains(fileType)) {
+      indexer.index(path.toFile(), fileType);
+    }
+
     return FileVisitResult.CONTINUE;
   }
 
   @Override
-  public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-    System.err.println("Failed to visit file: " + file);
+  public FileVisitResult visitFileFailed(Path path, IOException exc) throws IOException {
+    System.err.println("Failed to visit file: " + path);
     return FileVisitResult.CONTINUE;
   }
 
@@ -41,7 +48,11 @@ public class FileCrawler implements FileVisitor<Path> {
     return FileVisitResult.CONTINUE;
   }
 
-  private boolean isReadable(Path file) {
-    return true;
+  private String getFileType(Path path) {
+    try {
+      return Files.probeContentType(path);
+    } catch (Exception e) {
+      return null;
+    }
   }
 }
