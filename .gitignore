@@ -1,5 +1,6 @@
 /src/main/java/com/jsearch/indexer/index
 target/
+.vscode/
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup

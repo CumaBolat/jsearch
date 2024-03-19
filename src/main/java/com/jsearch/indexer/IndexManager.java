@@ -26,7 +26,7 @@ public class IndexManager {
   private String indexFilePath = "src/main/java/com/jsearch/indexer/index";
 
   private int index = 0;
-  private final int MAX_BLOCK_SIZE = 1_000_000;
+  private final int MAX_BLOCK_SIZE = 10_000;
 
   private IndexManager() {
     createIndexFile();
