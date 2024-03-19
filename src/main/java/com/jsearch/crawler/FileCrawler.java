@@ -49,10 +49,9 @@ public class FileCrawler implements FileVisitor<Path> {
   }
 
   private String getFileType(Path path) {
-    try {
-      return Files.probeContentType(path).split("/")[0];
-    } catch (Exception e) {
-      return null;
-    }
+    String fileName = path.getFileName().toString();
+    int dotIndex = fileName.lastIndexOf('.');
+
+    return (dotIndex == -1) ? "" : fileName.substring(dotIndex + 1);
   }
 }
