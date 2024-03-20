@@ -6,7 +6,7 @@ import com.jsearch.indexer.indexing.strategies.*;
 public class IndexStrategyFactory {
   public FileIndexer getIndexStrategy(String fileType) {
     switch (fileType) {
-      case "text":
+      case "txt":
         return new TextIndexingStrategy();
       case "pdf":
         return new PdfIndexingStrategy();

@@ -14,7 +14,7 @@ import com.jsearch.indexer.Indexer;
 
 public class FileCrawler implements FileVisitor<Path> {
 
-  List<String> supportedFileTypes = Arrays.asList("text", "pdf", "doc", "docx", "ppt", "xls", "xlsx", "csv");
+  List<String> supportedFileTypes = Arrays.asList("txt", "pdf", "doc", "docx", "ppt", "xls", "xlsx", "csv");
 
   private Indexer indexer;
 
