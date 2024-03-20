@@ -7,7 +7,7 @@ import java.io.IOException;
 
 import com.jsearch.indexer.indexing.FileIndexer;
 
-public class TextIndexingStrategy implements FileIndexer {
+public class TextIndexingStrategy extends FileIndexer {
   @Override
   public void index(File file) {
     System.out.println("Indexing text file: " + file.getName());

@@ -7,7 +7,7 @@ import java.io.File;
 
 import com.jsearch.indexer.indexing.FileIndexer;
 
-public class PdfIndexingStrategy implements FileIndexer {
+public class PdfIndexingStrategy extends FileIndexer {
   @Override
   public void index(File file) {
     try {

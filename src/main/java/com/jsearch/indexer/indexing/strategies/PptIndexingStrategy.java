@@ -4,7 +4,7 @@ import java.io.File;
 
 import com.jsearch.indexer.indexing.FileIndexer;
 
-public class PptIndexingStrategy implements FileIndexer {
+public class PptIndexingStrategy extends FileIndexer {
   @Override
   public void index (File file) {
   }
