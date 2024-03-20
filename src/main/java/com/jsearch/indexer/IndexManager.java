@@ -48,10 +48,10 @@ public class IndexManager {
     }
   }
 
-  public void addWordToIndex(String token, String path, int lineNumber, int wordPosition) {
+  public void addWordToIndex(String word, String path, int lineNumber, int wordPosition) {
     String line = " [" + path + ", " + lineNumber + ", " + wordPosition + "]";
 
-    addWordToDictionary(token, line);
+    addWordToBlock(word, line);
 
     if (this.indexMap.size() == this.MAX_BLOCK_SIZE) {
       writeBlockToDisk();
@@ -60,7 +60,7 @@ public class IndexManager {
     }
   }
 
-  private void addWordToDictionary(String word, String line) {
+  private void addWordToBlock(String word, String line) {
     if (this.indexMap.containsKey(word)) {
       this.indexMap.get(word).add(line);
     } else {

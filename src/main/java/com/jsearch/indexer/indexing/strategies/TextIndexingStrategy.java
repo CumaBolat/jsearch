@@ -10,7 +10,6 @@ import com.jsearch.indexer.indexing.FileIndexer;
 public class TextIndexingStrategy extends FileIndexer {
   @Override
   public void index(File file) {
-    System.out.println("Indexing text file: " + file.getName());
     try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
       String line;
       String filePath = file.getPath();
@@ -20,8 +19,9 @@ public class TextIndexingStrategy extends FileIndexer {
         lineNumber++;
         String[] words = line.split(" ");
         for (int i = 0; i < words.length; i++) {
-          String word = words[i].toLowerCase();
-          indexManager.addWordToIndex(word, filePath, lineNumber, i);
+          String word = words[i];
+
+          addWordToIndex(word, filePath, lineNumber, i);
         }
       }
     } catch (IOException e) {
