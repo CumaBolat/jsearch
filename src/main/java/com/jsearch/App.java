@@ -26,15 +26,27 @@ public class App {
       String directoryPath = scanner.next();
 
       if (directoryPath.equals("a")) {
-        searchDirectoryPath = Paths.get(System.getProperty("user.home"));
+        System.out.println("Search time:" + System.currentTimeMillis());
+        searchDirectoryPath = Paths.get("/home/cuma/bitirme/jsearch_test");
+        System.out.println("Search time:" + System.currentTimeMillis());
       } else {
         searchDirectoryPath = Paths.get(directoryPath);
       }
 
+      Thread fileCrawlerThread = new Thread(() -> {
+        try {
+          Files.walkFileTree(searchDirectoryPath, fileCrawler);
+        } catch (IOException e) {
+          System.err.println("Error while walking the file tree: " + e.getMessage());
+        }
+      });
+
+      fileCrawlerThread.start();
+
       try {
-        Files.walkFileTree(searchDirectoryPath, fileCrawler);
-      } catch (IOException e) {
-        System.err.println("Error while walking the file tree: " + e.getMessage());
+        fileCrawlerThread.join();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
       }
     }
   }

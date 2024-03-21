@@ -10,6 +10,7 @@ import com.jsearch.indexer.indexing.FileIndexer;
 public class PdfIndexingStrategy extends FileIndexer {
   @Override
   public void index(File file) {
+    int currentTime = (int) System.currentTimeMillis();
     try {
       PDDocument document = PDDocument.load(file);
       PDFTextStripper pdfStripper = new PDFTextStripper();
@@ -28,5 +29,7 @@ public class PdfIndexingStrategy extends FileIndexer {
     } catch (Exception e) {
       e.printStackTrace();
     }
+    System.out.println(
+        "Time taken to index " + file.getName() + " is " + ((int) System.currentTimeMillis() - currentTime) + "ms");
   }
 }

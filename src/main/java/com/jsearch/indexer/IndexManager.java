@@ -1,45 +1,42 @@
 package com.jsearch.indexer;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.nio.Buffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class IndexManager {
 
-  private static IndexManager instance = null;
-
-  /*
-   * This map stores the word and the index (line position) of the word in the
-   * index file
-   */
-  private HashMap<String, List<String>> indexMap = new HashMap<>();
-
-  private String indexFilePath = "src/main/java/com/jsearch/indexer/index";
-
-  private int index = 0;
+  private final ConcurrentHashMap<String, List<String>> indexMap = new ConcurrentHashMap<>();
+  private final String indexFilePath = "src/main/java/com/jsearch/indexer/index";
   private final int MAX_BLOCK_SIZE = 10_000;
+  private long lastAddWordTime = System.currentTimeMillis();
+
+  private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+  private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+  private static IndexManager instance = null;
 
   private IndexManager() {
     createIndexFile();
+    //scheduler.scheduleAtFixedRate(() -> writeRemainingBlockToDiskAndJoinThreads(), 0, 1, TimeUnit.SECONDS);
   }
 
-  public static IndexManager getInstance() {
+  public static synchronized IndexManager getInstance() {
     if (instance == null) {
       instance = new IndexManager();
     }
     return instance;
   }
 
-  public void createIndexFile() {
+  public synchronized void createIndexFile() {
     try {
       PrintWriter writer = new PrintWriter(new FileWriter(indexFilePath, true));
       writer.close();
@@ -48,19 +45,19 @@ public class IndexManager {
     }
   }
 
-  public void addWordToIndex(String word, String path, int lineNumber, int wordPosition) {
-    String line = " [" + path + ", " + lineNumber + ", " + wordPosition + "]";
+  public synchronized void addWordToIndex(String word, String path, int lineNumber, int wordPosition) {
+    this.lastAddWordTime = System.currentTimeMillis();
 
+    String line = " [" + path + ", " + lineNumber + ", " + wordPosition + "]";
     addWordToBlock(word, line);
 
     if (this.indexMap.size() == this.MAX_BLOCK_SIZE) {
       writeBlockToDisk();
       this.indexMap.clear();
-      System.out.println("Wrote a block.");
     }
   }
 
-  private void addWordToBlock(String word, String line) {
+  private synchronized void addWordToBlock(String word, String line) {
     if (this.indexMap.containsKey(word)) {
       this.indexMap.get(word).add(line);
     } else {
@@ -70,7 +67,7 @@ public class IndexManager {
     }
   }
 
-  private void writeBlockToDisk() {
+  private synchronized void writeBlockToDisk() {
     try {
       PrintWriter writer = new PrintWriter(new FileWriter(indexFilePath, true));
 

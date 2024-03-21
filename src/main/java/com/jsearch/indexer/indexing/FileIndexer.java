@@ -1,7 +1,10 @@
 package com.jsearch.indexer.indexing;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
@@ -12,7 +15,7 @@ import com.jsearch.indexer.IndexManager;
 
 public abstract class FileIndexer {
   private IndexManager indexManager = IndexManager.getInstance();
-  private String removeSpecialCharacterRegex = "[^a-z0-9]";
+  Pattern removeSpecialCharactersPattern = Pattern.compile("[^a-zA-Z0-9]");
 
   private static final StanfordCoreNLP pipeline;
 
@@ -26,7 +29,9 @@ public abstract class FileIndexer {
   }
 
   protected void addWordToIndex(String word, String path, int lineNumber, int wordPosition) {
-    if (word.length() == 0 || word.equals("\n")) return;
+    word = removeSpecialCharactersPattern.matcher(word).replaceAll("");
+    if (word.length() < 2 || word.equals("\n"))
+      return;
     word = lemmatizeWord(word.toLowerCase());
     indexManager.addWordToIndex(word, path, lineNumber, wordPosition);
   }

@@ -1,25 +1,34 @@
 package com.jsearch.crawler;
 
-import java.nio.file.attribute.BasicFileAttributes;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
-import java.io.IOException;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.List;
-
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.jsearch.indexer.Indexer;
 
 public class FileCrawler implements FileVisitor<Path> {
 
-  List<String> supportedFileTypes = Arrays.asList("txt", "pdf", "doc", "docx", "ppt", "xls", "xlsx", "csv");
+  private static final int NUM_THREADS = 5;
+  private final List<String> supportedFileTypes = Arrays.asList("txt", "pdf", "doc", "docx", "ppt", "xls", "xlsx", "csv");
 
-  private Indexer indexer;
+  private final ExecutorService executor;
+  private final Indexer indexer;
+  private final CountDownLatch latch;
 
   public FileCrawler() {
-    indexer = new Indexer();
+    this.executor = Executors.newFixedThreadPool(NUM_THREADS);
+    this.indexer = new Indexer();
+    this.latch = new CountDownLatch(NUM_THREADS);
   }
 
   @Override
@@ -31,9 +40,8 @@ public class FileCrawler implements FileVisitor<Path> {
   public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
     String fileType = getFileType(path);
     if (fileType != null && supportedFileTypes.contains(fileType)) {
-      indexer.index(path.toFile(), fileType);
+      executor.execute(new IndexTask(path.toFile(), fileType));
     }
-
     return FileVisitResult.CONTINUE;
   }
 
@@ -51,7 +59,35 @@ public class FileCrawler implements FileVisitor<Path> {
   private String getFileType(Path path) {
     String fileName = path.getFileName().toString();
     int dotIndex = fileName.lastIndexOf('.');
-
     return (dotIndex == -1) ? "" : fileName.substring(dotIndex + 1);
+  }
+
+  private class IndexTask implements Runnable {
+    private final File file;
+    private final String fileType;
+
+    public IndexTask(File file, String fileType) {
+      this.file = file;
+      this.fileType = fileType;
+    }
+
+    @Override
+    public void run() {
+      try {
+        indexer.index(file, fileType);
+      } finally {
+        latch.countDown();
+      }
+    }
+  }
+
+  public void awaitCompletion() {
+    try {
+      latch.await();
+      executor.shutdown();
+      executor.awaitTermination(1, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 }

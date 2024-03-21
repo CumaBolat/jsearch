@@ -14,6 +14,7 @@ public class CsvIndexingStrategy extends FileIndexer {
    */
   @Override
   public void index(File file) {
+    int currentTime = (int) System.currentTimeMillis();
     try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
       String line;
       String filePath = file.getPath();
@@ -26,7 +27,6 @@ public class CsvIndexingStrategy extends FileIndexer {
           String[] words = cells[i].split(" ");
           for (int j = 0; j < words.length; j++) {
             String word = words[j];
-            System.out.println("Adding word: " + word);
 
             addWordToIndex(word, filePath, lineNumber, i);
           }
@@ -35,5 +35,6 @@ public class CsvIndexingStrategy extends FileIndexer {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    System.out.println("Time taken to index " + file.getName() + " is " + ((int) System.currentTimeMillis() - currentTime) + "ms");
   }
 }
