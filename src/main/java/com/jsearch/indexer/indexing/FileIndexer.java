@@ -12,12 +12,14 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 
 import com.jsearch.indexer.IndexManager;
+import com.jsearch.indexer.dictionary.Dictionary;
 
 public abstract class FileIndexer {
   private IndexManager indexManager = IndexManager.getInstance();
   Pattern removeSpecialCharactersPattern = Pattern.compile("[^a-zA-Z0-9]");
 
   private static final StanfordCoreNLP pipeline;
+  private static Dictionary dictionary = new Dictionary();
 
   public abstract void index(File file);
 
@@ -30,7 +32,7 @@ public abstract class FileIndexer {
 
   protected void addWordToIndex(String word, String path, int lineNumber, int wordPosition) {
     word = removeSpecialCharactersPattern.matcher(word).replaceAll("");
-    if (word.length() < 2 || word.equals("\n"))
+    if (word.length() < 2 || word.equals("\n") || !dictionary.isWord(word))
       return;
     word = lemmatizeWord(word.toLowerCase());
     indexManager.addWordToIndex(word, path, lineNumber, wordPosition);

@@ -15,8 +15,10 @@ import java.util.concurrent.TimeUnit;
 public class IndexManager {
 
   private final ConcurrentHashMap<String, List<String>> indexMap = new ConcurrentHashMap<>();
+
   private final String indexFilePath = "src/main/java/com/jsearch/indexer/index";
   private final int MAX_BLOCK_SIZE = 10_000;
+  
   private long lastAddWordTime = System.currentTimeMillis();
 
   private static IndexManager instance = null;

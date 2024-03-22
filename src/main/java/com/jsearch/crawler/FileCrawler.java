@@ -35,6 +35,7 @@ public class FileCrawler implements FileVisitor<Path> {
 
   @Override
   public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+    System.out.println("Visiting file: " + path);
     String fileType = getFileType(path);
     if (fileType != null && supportedFileTypes.contains(fileType)) {
       executor.execute(new IndexTask(path.toFile(), fileType));
