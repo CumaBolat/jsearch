@@ -19,14 +19,10 @@ public class IndexManager {
   private final int MAX_BLOCK_SIZE = 10_000;
   private long lastAddWordTime = System.currentTimeMillis();
 
-  private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-  private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
   private static IndexManager instance = null;
 
   private IndexManager() {
     createIndexFile();
-    //scheduler.scheduleAtFixedRate(() -> writeRemainingBlockToDiskAndJoinThreads(), 0, 1, TimeUnit.SECONDS);
   }
 
   public static synchronized IndexManager getInstance() {

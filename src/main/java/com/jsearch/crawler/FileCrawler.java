@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -21,14 +20,12 @@ public class FileCrawler implements FileVisitor<Path> {
   private static final int NUM_THREADS = 5;
   private final List<String> supportedFileTypes = Arrays.asList("txt", "pdf", "doc", "docx", "ppt", "xls", "xlsx", "csv");
 
-  private final ExecutorService executor;
+  public final ExecutorService executor;
   private final Indexer indexer;
-  private final CountDownLatch latch;
 
   public FileCrawler() {
     this.executor = Executors.newFixedThreadPool(NUM_THREADS);
     this.indexer = new Indexer();
-    this.latch = new CountDownLatch(NUM_THREADS);
   }
 
   @Override
@@ -73,21 +70,7 @@ public class FileCrawler implements FileVisitor<Path> {
 
     @Override
     public void run() {
-      try {
-        indexer.index(file, fileType);
-      } finally {
-        latch.countDown();
-      }
-    }
-  }
-
-  public void awaitCompletion() {
-    try {
-      latch.await();
-      executor.shutdown();
-      executor.awaitTermination(1, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      indexer.index(file, fileType);
     }
   }
 }
