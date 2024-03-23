@@ -22,9 +22,17 @@ public class IndexManager {
   private long lastAddWordTime = System.currentTimeMillis();
 
   private static IndexManager instance = null;
+  private static ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
   private IndexManager() {
     createIndexFile();
+    executor.scheduleAtFixedRate(() -> {
+      if (System.currentTimeMillis() - lastAddWordTime > 1000) {
+        writeBlockToDisk();
+        this.indexMap.clear();
+        executor.shutdown();
+      }
+    }, 10, 1, TimeUnit.SECONDS);
   }
 
   public static synchronized IndexManager getInstance() {
