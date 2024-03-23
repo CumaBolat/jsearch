@@ -18,18 +18,24 @@ import com.jsearch.indexer.Indexer;
 public class FileCrawler implements FileVisitor<Path> {
 
   private static final int NUM_THREADS = 5;
+
   private final List<String> supportedFileTypes = Arrays.asList("txt", "pdf", "doc", "docx", "ppt", "xls", "xlsx", "csv");
+  private List<String> ingoredDirectories;
 
   public final ExecutorService executor;
   private final Indexer indexer;
 
-  public FileCrawler() {
+  public FileCrawler(List<String> ignoredDirectories) {
     this.executor = Executors.newFixedThreadPool(NUM_THREADS);
     this.indexer = new Indexer();
+    this.ingoredDirectories = ignoredDirectories;
   }
 
   @Override
   public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+    if (ingoredDirectories.contains(dir.getFileName().toString())) {
+      return FileVisitResult.SKIP_SUBTREE;
+    }
     return FileVisitResult.CONTINUE;
   }
 
