@@ -33,7 +33,7 @@ public class FileCrawler implements FileVisitor<Path> {
 
   @Override
   public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-    if (ingoredDirectories.contains(dir.getFileName().toString())) {
+    if (isIgnoredDirectory(dir)) {
       return FileVisitResult.SKIP_SUBTREE;
     }
     return FileVisitResult.CONTINUE;
@@ -64,6 +64,16 @@ public class FileCrawler implements FileVisitor<Path> {
     String fileName = path.getFileName().toString();
     int dotIndex = fileName.lastIndexOf('.');
     return (dotIndex == -1) ? "" : fileName.substring(dotIndex + 1);
+  }
+
+  private boolean isIgnoredDirectory(Path path) {
+    for (String ignoredDirectory : ingoredDirectories) {
+      if (path.toString().contains(ignoredDirectory)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private class IndexTask implements Runnable {
