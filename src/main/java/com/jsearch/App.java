@@ -11,11 +11,13 @@ import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 import com.jsearch.crawler.FileCrawler;
+import com.jsearch.searcher.Searcher;
 
 public class App {
 
   private static Path searchDirectoryPath;
   private static FileCrawler fileCrawler;
+  private static Searcher searcher = new Searcher();
 
   private static Scanner scanner = new Scanner(System.in);
 
@@ -37,6 +39,7 @@ public class App {
       System.out.println("Please enter the query you want to search (Press q to quit): \r");
       String searchQuery = scanner.next();
       if (searchQuery.equals("q")) break;
+      searcher.search(searchQuery);
     }
   }
 
@@ -100,6 +103,7 @@ public class App {
   }
 
   private static void addDefaultIgnoredDirectories() {
-    ignoredDirectories.addAll(Arrays.asList("node_modules", "target", ".git", ".idea"));
+    ignoredDirectories.addAll(Arrays.asList("node_modules", "target", ".git", "rbenv", ".idea", ".rspec", ".steam", ".gradle" , "words.txt", "cache", "logs",
+                                                  "build", "dist", "bin", "obj", "out", "vendor", "tmp", "temp", "examples", "samples"));
   }
 }

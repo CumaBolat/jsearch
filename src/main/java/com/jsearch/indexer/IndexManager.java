@@ -17,7 +17,7 @@ public class IndexManager {
   private final ConcurrentHashMap<String, List<String>> indexMap = new ConcurrentHashMap<>();
 
   private final String indexFilePath = "src/main/java/com/jsearch/indexer/index";
-  private final int MAX_BLOCK_SIZE = 10_000;
+  private final int MAX_BLOCK_SIZE = 100_000;
   
   private long lastAddWordTime = System.currentTimeMillis();
 
@@ -32,7 +32,7 @@ public class IndexManager {
         this.indexMap.clear();
         executor.shutdown();
       }
-    }, 10, 1, TimeUnit.SECONDS);
+    }, 10, 3, TimeUnit.SECONDS);
   }
 
   public static synchronized IndexManager getInstance() {
