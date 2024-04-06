@@ -101,6 +101,7 @@ public class IndexManager {
       List<List<Integer>> pathIndexes = Collections.synchronizedList(new ArrayList<>());
       pathIndexes.add(wordPositions);
       ConcurrentHashMap<String, List<List<Integer>>> pathMap = new ConcurrentHashMap<>();
+      pathMap.put(path, pathIndexes);
       List<ConcurrentHashMap<String, List<List<Integer>>>> pathList = Collections.synchronizedList(new ArrayList<>());
       pathList.add(pathMap);
       this.indexMap.put(word, pathList);
