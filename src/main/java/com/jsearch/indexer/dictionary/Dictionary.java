@@ -8,13 +8,13 @@ import java.util.Set;
 
 public class Dictionary {
 
-  private Set<String> words = new HashSet<>();
+  private static Set<String> words = new HashSet<>();
 
-  public Dictionary(){
+  static {
     constructDictionary();
   }
 
-  public void constructDictionary(){
+  private static void constructDictionary(){
     System.out.println("Constructing dictionary");
     try (BufferedReader reader = new BufferedReader(new FileReader("src/main/java/com/jsearch/indexer/dictionary/words.txt"))) {
       String line;
@@ -26,7 +26,7 @@ public class Dictionary {
     }
   }
 
-  public boolean isWord(String word){
+  public static boolean isWord(String word){
     return words.contains(word);
   }
 }

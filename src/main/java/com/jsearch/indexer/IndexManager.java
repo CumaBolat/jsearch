@@ -126,7 +126,7 @@ public class IndexManager {
       PrintWriter writer = new PrintWriter(new FileWriter(indexFilePath, true));
 
       for (String token : this.indexMap.keySet()) {
-        writer.write(token + " -> ");
+        writer.write(token + " => ");
         for (int i = 0; i < this.indexMap.get(token).size(); i++) {
           for (String path : this.indexMap.get(token).get(i).keySet()) {
             writer.write("[" + path + " -> ");

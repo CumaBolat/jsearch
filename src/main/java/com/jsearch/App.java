@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.jsearch.crawler.FileCrawler;
 import com.jsearch.searcher.Searcher;
+import com.jsearch.indexer.dictionary.Dictionary;
 
 public class App {
 
@@ -23,6 +24,10 @@ public class App {
 
   private static List<String> ignoredDirectories = new ArrayList<>();
 
+  static {
+    System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+  }
+
   public static void main(String[] args) {
     printJSearchAsciiArt();
     addDefaultIgnoredDirectories();
@@ -30,14 +35,16 @@ public class App {
     if (!indexFileExists()) {
       getSearchDirectoryFromUser();
       getIgnoredDirectoriesFromUser();
+      initializeDictionary();
       startFileCrawling();
+      scanner.nextLine();
     } else {
       System.out.println("An index file has been found.");
     }
 
     while (true) {
       System.out.println("Please enter the query you want to search (Press q to quit): \r");
-      String searchQuery = scanner.next();
+      String searchQuery = scanner.nextLine();
       if (searchQuery.equals("q")) break;
       searcher.search(searchQuery);
     }
@@ -74,6 +81,10 @@ public class App {
     }
 
     fileCrawler = new FileCrawler(ignoredDirectories);
+  }
+
+  private static void initializeDictionary() {
+    Dictionary dictionary = new Dictionary();
   }
 
   private static void startFileCrawling() {
