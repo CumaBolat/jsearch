@@ -1,4 +1,5 @@
-/src/main/java/com/jsearch/indexer/index
+/src/main/java/com/jsearch/indexer/index.txt
+/src/main/java/com/jsearch/indexer/path.txt
 target/
 .vscode/
 pom.xml.tag

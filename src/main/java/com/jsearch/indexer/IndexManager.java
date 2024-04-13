@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,26 +19,22 @@ public class IndexManager {
 
   /*        Visual Representation of Index Map:
    *
-   *             {            (lineNumber, wordPosition) }
-   *             { folder1 -> (lineNumber, wordPosition) }
-   *           / {            (lineNumber, wordPosition) }
+   *             {             (lineNumber, wordPosition) }
+   *             { folderID -> (lineNumber, wordPosition) }
+   *           / {             (lineNumber, wordPosition) }
    *    word      ---------------------------------------
-   *           \ {            (lineNumber, wordPosition) }
-   *             { folder2 -> (lineNumber, wordPosition) }
-   *             {            (lineNumber, wordPosition) }
-   * 
-   * 
-   *                        (lineNumber, wordPosition)
-   *              folder3 -> (lineNumber, wordPosition)
-   *            /           (lineNumber, wordPosition)
-   *     word2   
-   *            \            (lineNumber, wordPosition)
-   *              folder4 -> (lineNumber, wordPosition)
-   *                         (lineNumber, wordPosition)
+   *           \ {             (lineNumber, wordPosition) }
+   *             { folderID -> (lineNumber, wordPosition) }
+   *             {             (lineNumber, wordPosition) }
    */
-  private final ConcurrentHashMap<String, List<ConcurrentHashMap<String, List<List<Integer>>>>> indexMap = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<String, List<ConcurrentHashMap<Integer, List<List<Integer>>>>> indexMap = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<String, Integer> pathMap = new ConcurrentHashMap<>();
 
-  private final String indexFilePath = "src/main/java/com/jsearch/indexer/index";
+  private Set<String> paths = new HashSet<>();
+
+  private final String indexFilePath = "src/main/java/com/jsearch/indexer/index.txt";
+  private final String pathFilePath = "src/main/java/com/jsearch/indexer/path.txt";
+
   private final int MAX_BLOCK_SIZE = 100_000;
   
   private long lastAddWordTime = System.currentTimeMillis();
@@ -46,6 +44,7 @@ public class IndexManager {
 
   private IndexManager() {
     createIndexFile();
+    createPathFile();
     executor.scheduleAtFixedRate(() -> {
       if (System.currentTimeMillis() - lastAddWordTime > 1000) {
         writeBlockToDisk();
@@ -62,9 +61,18 @@ public class IndexManager {
     return instance;
   }
 
-  public synchronized void createIndexFile() {
+  private synchronized void createIndexFile() {
     try {
       PrintWriter writer = new PrintWriter(new FileWriter(indexFilePath, true));
+      writer.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private synchronized void createPathFile() {
+    try {
+      PrintWriter writer = new PrintWriter(new FileWriter(pathFilePath, true));
       writer.close();
     } catch (IOException e) {
       e.printStackTrace();
@@ -74,14 +82,25 @@ public class IndexManager {
   public synchronized void addWordToIndex(String word, String path, int lineNumber, int wordPosition) {
     this.lastAddWordTime = System.currentTimeMillis();
 
+    int pathID = -1;
+
+    if (this.pathMap.containsKey(path)) {
+      pathID = this.pathMap.get(path);
+    } else {
+      pathID = this.paths.size();
+      this.pathMap.put(path, pathID);
+      this.paths.add(path);
+      writePathToDisk(path);
+    }
+
     if (this.indexMap.containsKey(word)) {
-      if (documentContainsWord(this.indexMap.get(word), path)) {
+      if (documentContainsWord(this.indexMap.get(word), pathID)) {
         List<Integer> wordPositions = Collections.synchronizedList(new ArrayList<>());
         wordPositions.add(lineNumber);
         wordPositions.add(wordPosition);
-        for (ConcurrentHashMap<String, List<List<Integer>>> pathIndex : this.indexMap.get(word)) {
-          if (pathIndex.containsKey(path)) {
-            pathIndex.get(path).add(wordPositions);
+        for (ConcurrentHashMap<Integer, List<List<Integer>>> pathIndex : this.indexMap.get(word)) {
+          if (pathIndex.containsKey(pathID)) {
+            pathIndex.get(pathID).add(wordPositions);
           }
         }
       } else {
@@ -90,8 +109,8 @@ public class IndexManager {
         wordPositions.add(lineNumber);
         wordPositions.add(wordPosition);
         pathIndexes.add(wordPositions);
-        ConcurrentHashMap<String, List<List<Integer>>> pathMap = new ConcurrentHashMap<>();
-        pathMap.put(path, pathIndexes);
+        ConcurrentHashMap<Integer, List<List<Integer>>> pathMap = new ConcurrentHashMap<>();
+        pathMap.put(pathID, pathIndexes);
         this.indexMap.get(word).add(pathMap);
       }
     } else {
@@ -100,9 +119,9 @@ public class IndexManager {
       wordPositions.add(wordPosition);
       List<List<Integer>> pathIndexes = Collections.synchronizedList(new ArrayList<>());
       pathIndexes.add(wordPositions);
-      ConcurrentHashMap<String, List<List<Integer>>> pathMap = new ConcurrentHashMap<>();
-      pathMap.put(path, pathIndexes);
-      List<ConcurrentHashMap<String, List<List<Integer>>>> pathList = Collections.synchronizedList(new ArrayList<>());
+      ConcurrentHashMap<Integer, List<List<Integer>>> pathMap = new ConcurrentHashMap<>();
+      pathMap.put(pathID, pathIndexes);
+      List<ConcurrentHashMap<Integer, List<List<Integer>>>> pathList = Collections.synchronizedList(new ArrayList<>());
       pathList.add(pathMap);
       this.indexMap.put(word, pathList);
     }
@@ -113,9 +132,9 @@ public class IndexManager {
     }
   }
 
-  private synchronized boolean documentContainsWord(List<ConcurrentHashMap<String, List<List<Integer>>>> pathIndexes, String path) {
-    for (ConcurrentHashMap<String, List<List<Integer>>> pathIndex : pathIndexes) {
-      if (pathIndex.containsKey(path)) return true;
+  private synchronized boolean documentContainsWord(List<ConcurrentHashMap<Integer, List<List<Integer>>>> pathIndexes, int pathID) {
+    for (ConcurrentHashMap<Integer, List<List<Integer>>> pathIndex : pathIndexes) {
+      if (pathIndex.containsKey(pathID)) return true;
     }
 
     return false;
@@ -128,18 +147,28 @@ public class IndexManager {
       for (String token : this.indexMap.keySet()) {
         writer.write(token + " => ");
         for (int i = 0; i < this.indexMap.get(token).size(); i++) {
-          for (String path : this.indexMap.get(token).get(i).keySet()) {
-            writer.write("[" + path + " -> ");
-            for (int j = 0; j < this.indexMap.get(token).get(i).get(path).size(); j++) {
-              writer.write("[" + this.indexMap.get(token).get(i).get(path).get(j).get(0) + ",");
-              writer.write(this.indexMap.get(token).get(i).get(path).get(j).get(1) + "]");
+          for (int pathID : this.indexMap.get(token).get(i).keySet()) {
+            writer.write(pathID + " ");
+            for (int j = 0; j < this.indexMap.get(token).get(i).get(pathID).size(); j++) {
+              writer.write(this.indexMap.get(token).get(i).get(pathID).get(j).get(0) + ",");
+              writer.write(this.indexMap.get(token).get(i).get(pathID).get(j).get(1) + ",");
             }
-            writer.write("]");
+            writer.write(";");
           }
         }
         writer.println();
       }
 
+      writer.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void writePathToDisk(String path) {
+    try {
+      PrintWriter writer = new PrintWriter(new FileWriter(pathFilePath, true));
+      writer.println(path);
       writer.close();
     } catch (IOException e) {
       e.printStackTrace();
