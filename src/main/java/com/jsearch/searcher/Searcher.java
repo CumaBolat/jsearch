@@ -5,28 +5,27 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.jsearch.lemmatizer.Lemmatize;
 import com.jsearch.searcher.QueryIndexMapInitializer;
+import com.jsearch.searcher.searchmodels.*;
 
 public class Searcher {
 
   private List<String> lemmatizedQuery = new ArrayList<>();
-  private Map<String, Map<Integer, List<List<Integer>>>> queryIndexes = new HashMap<>();
+  private List<SearchModel> searchModels = Arrays.asList(new BooleanModel(), new VectorSpaceModel());
 
-  /*
-   * Initial Query: "I am a software engineer"
-   * Lemmatized Query: ["I", "be", "a", "software", "engineer"]
-   * 
-   * 
-   * 
-   */
+  private Map<String, Map<Integer, List<List<Integer>>>> queryIndexes = new HashMap<>();
+  
   public void search(String searchQuery) {
     lemmatizeQuery(searchQuery);
     initializeQueryIndexMap();
+
+    List<String> searchResults = this.fetchSearchResults();
   }
 
   private void lemmatizeQuery(String searchQuery) {
@@ -45,6 +44,16 @@ public class Searcher {
     QueryIndexMapInitializer queryIndexMapInitializer = new QueryIndexMapInitializer();
 
     this.queryIndexes = queryIndexMapInitializer.initializeQueryIndexMap(this.lemmatizedQuery);
+  }
+
+  private List<String> fetchSearchResults() {
+    List<String> searchResults = new ArrayList<>();
+
+    for (int i = 0; i < this.searchModels.size(); i++) {
+      searchResults.addAll(this.searchModels.get(i).performSearch());
+    }
+
+    return searchResults;
   }
 }
 
