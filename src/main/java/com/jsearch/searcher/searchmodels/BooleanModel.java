@@ -64,6 +64,8 @@ public class BooleanModel implements SearchModel {
     List<Integer> commonIDs = new ArrayList<>();
 
     for (int i = 0; i < searchQuery.size(); i++) {
+      if (!queryIndexes.containsKey(searchQuery.get(i))) return new ArrayList<>();
+
       if (i == 0) {
         commonIDs.addAll(queryIndexes.get(searchQuery.get(i)).keySet());
       } else {
@@ -71,7 +73,6 @@ public class BooleanModel implements SearchModel {
       }
     }
 
-    System.out.println("Common IDs: " + commonIDs);
     return commonIDs;
   }
 
@@ -93,12 +94,10 @@ public class BooleanModel implements SearchModel {
           }
         }
 
-        //System.out.println("New Indexes Set: " + newIndexesSet);
         lastIndexesSet = newIndexesSet;
       }
     }
 
-    //this.printSet(lastIndexesSet);
     return lastIndexesSet.size() > 0;
   }
 
@@ -118,11 +117,5 @@ public class BooleanModel implements SearchModel {
     }
 
     return null;
-  }
-
-  private void printSet(List<List<Integer>> set) {
-    for (List<Integer> list : set) {
-      System.out.println(list);
-    }
   }
 }
