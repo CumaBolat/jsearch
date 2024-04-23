@@ -1,8 +1,6 @@
 package com.jsearch.indexer;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 
 public class Indexer {
 

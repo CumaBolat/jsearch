@@ -17,7 +17,6 @@ public class QueryIndexMapInitializer {
 
   public Map<String, Map<Integer, List<List<Integer>>>> initializeQueryIndexMap(List<String> query) {
     Map<String, Map<Integer, List<List<Integer>>>> queryIndexes = new HashMap<>();
-    Set<String> paths = new HashSet<>();
 
     try (BufferedReader reader = new BufferedReader(new FileReader(Paths.get(this.INDEX_DIRECTORY).toFile()))) {
       String line;
@@ -25,7 +24,6 @@ public class QueryIndexMapInitializer {
         String word = getInitialWord(line);
 
         if (!query.contains(word)) continue;
-        System.out.println("Word: " + word);
 
         String[] lineParts = line.split(" => ")[1].split(", ");
 
@@ -59,7 +57,7 @@ public class QueryIndexMapInitializer {
     } catch (IOException e) {
       e.printStackTrace();
     }
-    printQueryIndexes(queryIndexes);
+
     return queryIndexes;
   }
 
@@ -69,17 +67,5 @@ public class QueryIndexMapInitializer {
 
   private String[] getPathParts(String line) {
     return line.split(" ");
-  }
-
-  private void printQueryIndexes(Map<String, Map<Integer, List<List<Integer>>>> indexes) {
-    indexes.forEach((word, pathMap) -> {
-      System.out.println("Word: " + word);
-      pathMap.forEach((pathIndex, wordPositions) -> {
-        System.out.println("Path Index: " + pathIndex);
-        wordPositions.forEach(position -> {
-          System.out.println("Row Index: " + position.get(0) + " Col Index: " + position.get(1));
-        });
-      });
-    });
   }
 }
