@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import com.jsearch.lemmatizer.Lemmatize;
 import com.jsearch.searcher.QueryIndexMapInitializer;
@@ -21,23 +22,30 @@ public class Searcher {
 
   private Map<String, Map<Integer, List<List<Integer>>>> queryIndexes = new HashMap<>();
   
-  public void search(String searchQuery) {
+  public boolean search(String searchQuery) {
+    if (!queryIsValid(searchQuery)) return false;
+
     lemmatizeQuery(searchQuery);
     initializeQueryIndexMap();
 
     List<String> searchResults = this.fetchSearchResults();
+    return true;
+  }
+
+  private boolean queryIsValid(String searchQuery) {
+    return searchQuery.matches(".*\\w.*");
   }
 
   private void lemmatizeQuery(String searchQuery) {
     for (String word : searchQuery.split(" ")) {
-      this.lemmatizedQuery.add(Lemmatize.lemmatizeString(word));
+      String lemmatizedWord = Lemmatize.lemmatizeString(word);
+
+      if (lemmatizedWord == null) continue;
+
+      this.lemmatizedQuery.add(lemmatizedWord);
     }
 
-    System.out.print("Lemmatized Query: ");
-    for (String word : this.lemmatizedQuery) {
-      System.out.print(word + " ");
-    }
-    System.out.println();
+    System.out.println(this.lemmatizedQuery);
   }
 
   private void initializeQueryIndexMap() {
@@ -50,7 +58,7 @@ public class Searcher {
     List<String> searchResults = new ArrayList<>();
 
     for (int i = 0; i < this.searchModels.size(); i++) {
-      searchResults.addAll(this.searchModels.get(i).performSearch());
+      searchResults.addAll(this.searchModels.get(i).performSearch(queryIndexes, this.lemmatizedQuery));
     }
 
     return searchResults;

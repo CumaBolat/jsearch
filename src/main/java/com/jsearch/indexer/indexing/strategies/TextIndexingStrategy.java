@@ -10,6 +10,7 @@ import com.jsearch.indexer.indexing.FileIndexer;
 public class TextIndexingStrategy extends FileIndexer {
   @Override
   public void index(File file) {
+    int currentTime = (int) System.currentTimeMillis();
     try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
       String line;
       String filePath = file.getPath();
@@ -27,5 +28,7 @@ public class TextIndexingStrategy extends FileIndexer {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    System.out.println(
+        "Time taken to index " + file.getName() + " is " + ((int) System.currentTimeMillis() - currentTime) + "ms");
   }
 }

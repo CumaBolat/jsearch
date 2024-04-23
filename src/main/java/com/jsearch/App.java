@@ -18,7 +18,6 @@ public class App {
 
   private static Path searchDirectoryPath;
   private static FileCrawler fileCrawler;
-  private static Searcher searcher = new Searcher();
 
   private static Scanner scanner = new Scanner(System.in);
 
@@ -43,15 +42,21 @@ public class App {
     }
 
     while (true) {
+      Searcher searcher = new Searcher();
+
       System.out.println("Please enter the query you want to search (Press q to quit): \r");
       String searchQuery = scanner.nextLine();
-      if (searchQuery.equals("q")) break;
-      searcher.search(searchQuery);
+
+      if (searchQuery.equals("q")) {
+        break;
+      } else if (!searcher.search(searchQuery)) {
+        System.out.println("Please enter a valid query.");
+      }
     }
   }
 
   private static boolean indexFileExists() {
-    return Files.exists(Paths.get("src/main/java/com/jsearch/indexer/index"));
+    return Files.exists(Paths.get("src/main/java/com/jsearch/indexer/index.txt"));
   }
 
   private static void getSearchDirectoryFromUser() {

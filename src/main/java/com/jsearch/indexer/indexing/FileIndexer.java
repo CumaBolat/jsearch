@@ -18,15 +18,14 @@ import com.jsearch.lemmatizer.Lemmatize;
 
 public abstract class FileIndexer {
   private IndexManager indexManager = IndexManager.getInstance();
-  Pattern removeSpecialCharactersPattern = Pattern.compile("[^a-zA-Z0-9]");
 
   public abstract void index(File file);
 
   protected void addWordToIndex(String word, String path, int lineNumber, int wordPosition) {
-    word = removeSpecialCharactersPattern.matcher(word).replaceAll("");
-    if (word.length() < 2 || word.equals("\n") || !Dictionary.isWord(word))
-      return;
-    word = Lemmatize.lemmatizeString(word.toLowerCase());
+    word = Lemmatize.lemmatizeString(word);
+
+    if (word == null) return;
+
     indexManager.addWordToIndex(word, path, lineNumber, wordPosition);
   }
 }

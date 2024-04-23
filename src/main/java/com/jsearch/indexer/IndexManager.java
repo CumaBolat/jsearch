@@ -32,8 +32,8 @@ public class IndexManager {
 
   private Set<String> paths = new HashSet<>();
 
-  private final String indexFilePath = "src/main/java/com/jsearch/indexer/index.txt";
-  private final String pathFilePath = "src/main/java/com/jsearch/indexer/path.txt";
+  private final String INDEX_FILE_LOCATION = "src/main/java/com/jsearch/indexer/index.txt";
+  private final String PATH_FILE_LOCATION = "src/main/java/com/jsearch/indexer/path.txt";
 
   private final int MAX_BLOCK_SIZE = 100_000;
   
@@ -63,7 +63,7 @@ public class IndexManager {
 
   private synchronized void createIndexFile() {
     try {
-      PrintWriter writer = new PrintWriter(new FileWriter(indexFilePath, true));
+      PrintWriter writer = new PrintWriter(new FileWriter(INDEX_FILE_LOCATION, true));
       writer.close();
     } catch (IOException e) {
       e.printStackTrace();
@@ -72,7 +72,7 @@ public class IndexManager {
 
   private synchronized void createPathFile() {
     try {
-      PrintWriter writer = new PrintWriter(new FileWriter(pathFilePath, true));
+      PrintWriter writer = new PrintWriter(new FileWriter(PATH_FILE_LOCATION, true));
       writer.close();
     } catch (IOException e) {
       e.printStackTrace();
@@ -142,18 +142,17 @@ public class IndexManager {
 
   private void writeBlockToDisk() {
     try {
-      PrintWriter writer = new PrintWriter(new FileWriter(indexFilePath, true));
+      PrintWriter writer = new PrintWriter(new FileWriter(INDEX_FILE_LOCATION, true));
 
       for (String token : this.indexMap.keySet()) {
-        writer.write(token + " => ");
+        writer.write(token + " =>");
         for (int i = 0; i < this.indexMap.get(token).size(); i++) {
           for (int pathID : this.indexMap.get(token).get(i).keySet()) {
-            writer.write(pathID + " ");
             for (int j = 0; j < this.indexMap.get(token).get(i).get(pathID).size(); j++) {
-              writer.write(this.indexMap.get(token).get(i).get(pathID).get(j).get(0) + ",");
+              writer.write(" " + pathID + " ");
+              writer.write(this.indexMap.get(token).get(i).get(pathID).get(j).get(0) + " ");
               writer.write(this.indexMap.get(token).get(i).get(pathID).get(j).get(1) + ",");
             }
-            writer.write(";");
           }
         }
         writer.println();
@@ -167,7 +166,7 @@ public class IndexManager {
 
   private void writePathToDisk(String path) {
     try {
-      PrintWriter writer = new PrintWriter(new FileWriter(pathFilePath, true));
+      PrintWriter writer = new PrintWriter(new FileWriter(PATH_FILE_LOCATION, true));
       writer.println(path);
       writer.close();
     } catch (IOException e) {
@@ -176,7 +175,7 @@ public class IndexManager {
   }
 
   private void deleteIndexFile() {
-    File file = new File(indexFilePath);
+    File file = new File(INDEX_FILE_LOCATION);
     file.delete();
   }
 }
