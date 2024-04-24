@@ -20,6 +20,8 @@ public class PdfIndexingStrategy extends FileIndexer {
 
       for (int i = 0; i < text.length; i++) {
         String[] words = text[i].split(" ");
+        if (words.length == 0 || words[0].equals("")) continue;
+
         for (int j = 0; j < words.length; j++) {
           String word = words[j];
 

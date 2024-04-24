@@ -21,6 +21,8 @@ public class CsvIndexingStrategy extends FileIndexer {
       int lineNumber = 0;
 
       while ((line = reader.readLine()) != null) {
+        if (line.equals("")) continue;
+
         lineNumber++;
         String[] cells = line.split(",");
         for (int i = 0; i < cells.length; i++) {

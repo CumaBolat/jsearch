@@ -17,6 +17,8 @@ public class TextIndexingStrategy extends FileIndexer {
       int lineNumber = 0;
 
       while ((line = reader.readLine()) != null) {
+        if (line.equals("")) continue;
+
         lineNumber++;
         String[] words = line.split(" ");
         for (int i = 0; i < words.length; i++) {
