@@ -40,9 +40,12 @@ public class BooleanModel implements SearchModel {
       int docID = docIdsContainingSearchQuery.get(i);
 
       if (documentContainsExactQuery(docID)) {
-        searchResults.add(getDocumentNameFromDocumentId(docID));
-        System.out.println("Document Name: " + getDocumentNameFromDocumentId(docID));
+        searchResults.add(getDocumentNameFromDocumentId(docID) + " ---- (Boolean Model)");
       }
+    }
+
+    if (searchResults.size() == 0) {
+      searchResults.add("No exact match found for the search query.");
     }
 
     return searchResults;
@@ -106,7 +109,7 @@ public class BooleanModel implements SearchModel {
       String line;
       while ((line = br.readLine()) != null) {
         if (i == docID) {
-          return line + " (Exact Match)";
+          return line;
         }
         i++;
       }

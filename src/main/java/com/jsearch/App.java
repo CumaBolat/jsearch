@@ -23,6 +23,10 @@ public class App {
 
   private static List<String> ignoredDirectories = new ArrayList<>();
 
+  public static final String ANSI_RESET = "\u001B[0m";
+  public static final String ANSI_RED = "\u001B[31m";
+  public static final String ANSI_BLUE = "\u001B[34m";
+
   static {
     System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
   }
@@ -30,7 +34,7 @@ public class App {
   public static void main(String[] args) {
     printJSearchAsciiArt();
     addDefaultIgnoredDirectories();
-    
+
     if (!indexFileExists()) {
       getSearchDirectoryFromUser();
       getIgnoredDirectoriesFromUser();
@@ -44,8 +48,9 @@ public class App {
     while (true) {
       Searcher searcher = new Searcher();
 
-      System.out.println("Please enter the query you want to search (Press q to quit): \r");
+      System.out.println("Please enter the query you want to search (Press" + ANSI_RED + " q " + ANSI_RESET + "to quit): \r" + ANSI_RED);
       String searchQuery = scanner.nextLine();
+      System.out.print(ANSI_RESET);
 
       if (searchQuery.equals("q")) {
         break;
@@ -65,7 +70,7 @@ public class App {
     String directoryPath = scanner.next();
 
     if (directoryPath.equals("a")) {
-      searchDirectoryPath = Paths.get("/home/cuma/bitirme");
+      searchDirectoryPath = Paths.get("/home/cuma/bitirme/jsearch_test2");
     } else {
       searchDirectoryPath = Paths.get(directoryPath);
     }
@@ -115,11 +120,11 @@ public class App {
         "#  ╚█████╔╝███████║███████╗██║  ██║██║  ██║╚██████╗██║  ██║\n" +
         "#   ╚════╝ ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝\n" +
         "#                                                          \n" +
-        "#                                         made by cumabolat\n");
+        "#                                         made by" + ANSI_BLUE + " cumabolat\n" + ANSI_RESET);
   }
 
   private static void addDefaultIgnoredDirectories() {
-    ignoredDirectories.addAll(Arrays.asList("node_modules", "target", ".git", "rbenv", ".idea", ".rspec", ".steam", ".gradle" , "words.txt", "cache", "logs",
-                                                  "build", "dist", "bin", "obj", "out", "vendor", "tmp", "temp", "examples", "samples"));
+    ignoredDirectories.addAll(Arrays.asList("node_modules", "target", ".git", "rbenv", ".idea", ".rspec", ".steam",
+        ".gradle", "words.txt", "cache", "logs", "build", "dist", "bin", "obj", "out", "vendor", "tmp", "temp", "examples", "samples"));
   }
 }
