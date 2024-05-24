@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -28,13 +29,12 @@ public class IndexManager {
    */
   private ConcurrentHashMap<String, List<ConcurrentHashMap<Integer, List<List<Integer>>>>> indexMap = new ConcurrentHashMap<>();
   private ConcurrentHashMap<String, Integer> pathMap = new ConcurrentHashMap<>();
-
-  private Set<String> paths = new HashSet<>();
+  private ConcurrentHashMap<Integer, Integer> pathWordCountMap = new ConcurrentHashMap<>();
 
   private final String INDEX_FILE_LOCATION = "src/main/java/com/jsearch/indexer/index.txt";
   private final String PATH_FILE_LOCATION = "src/main/java/com/jsearch/indexer/path.txt";
 
-  private final int MAX_BLOCK_SIZE = 100_000;
+  private final int MAX_BLOCK_SIZE = 10_000_000;
   
   private long lastAddWordTime = System.currentTimeMillis();
 
@@ -46,6 +46,7 @@ public class IndexManager {
     createPathFile();
     executor.scheduleAtFixedRate(() -> {
       if (System.currentTimeMillis() - lastAddWordTime > 1000) {
+        writePathToDisk();
         writeBlockToDisk();
         this.indexMap.clear();
         executor.shutdown();
@@ -85,11 +86,11 @@ public class IndexManager {
 
     if (this.pathMap.containsKey(path)) {
       pathID = this.pathMap.get(path);
+      this.pathWordCountMap.put(pathID, this.pathWordCountMap.get(pathID) + 1);
     } else {
-      pathID = this.paths.size();
+      pathID = this.pathMap.size();
       this.pathMap.put(path, pathID);
-      this.paths.add(path);
-      writePathToDisk(path);
+      this.pathWordCountMap.put(pathID, 1);
     }
 
     if (this.indexMap.containsKey(word)) {
@@ -163,14 +164,30 @@ public class IndexManager {
     }
   }
 
-  private void writePathToDisk(String path) {
+  private void writePathToDisk() {
     try {
       PrintWriter writer = new PrintWriter(new FileWriter(PATH_FILE_LOCATION, true));
-      writer.println(path);
+      Object[] pathIdArray = this.pathWordCountMap.keySet().toArray();
+      Arrays.sort(pathIdArray);
+
+      for (Object pathID : pathIdArray) {
+        String path = getPathFromPathID((int) pathID);
+        int wordCount = this.pathWordCountMap.get(pathID);
+
+        writer.println(path + " => " + wordCount);
+      }
       writer.close();
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  private String getPathFromPathID(int pathID) {
+    for (String path : this.pathMap.keySet()) {
+      if (this.pathMap.get(path) == pathID) return path;
+    }
+
+    return null;
   }
 
   private void deleteIndexFile() {

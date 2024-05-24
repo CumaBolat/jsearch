@@ -70,7 +70,7 @@ public class App {
     String directoryPath = scanner.next();
 
     if (directoryPath.equals("a")) {
-      searchDirectoryPath = Paths.get("/home/cuma/bitirme/jsearch_test2");
+      searchDirectoryPath = Paths.get("/home/cuma/personal_projects/jsearch_test");
     } else {
       searchDirectoryPath = Paths.get(directoryPath);
     }

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class VectorSpaceModel implements SearchModel {
 
@@ -11,7 +12,7 @@ public class VectorSpaceModel implements SearchModel {
 
   @Override
   public List<String> performSearch(Map<String, Map<Integer, List<List<Integer>>>> queryIndexes, List<String> query) {
-    computeTfIdfWeights(queryIndexes, query);
+    computeTfIdfWeights(queryIndexes);
 
     Map<Integer, Double> documentScores = calculateCosineSimilarity(queryIndexes, query);
 
@@ -25,7 +26,8 @@ public class VectorSpaceModel implements SearchModel {
       searchResults.add(getDocumentNameFromDocumentId(entry.getKey()) + " ---- (Vector Space Model)");
       i++;
 
-      if (i == 3) break;
+      if (i == 3)
+        break;
     }
 
     if (searchResults.size() == 0) {
@@ -35,20 +37,22 @@ public class VectorSpaceModel implements SearchModel {
     return searchResults;
   }
 
-  private void computeTfIdfWeights(Map<String, Map<Integer, List<List<Integer>>>> queryIndexes, List<String> query) {
+  private void computeTfIdfWeights(Map<String, Map<Integer, List<List<Integer>>>> queryIndexes) {
     tfIdfWeights = new HashMap<>();
 
-    for (String term : query) {
-      if (!queryIndexes.containsKey(term)) continue;
+    int totalDocuments = queryIndexes.values().stream()
+        .flatMap(map -> map.keySet().stream())
+        .collect(Collectors.toSet()).size();
 
+    for (String term : queryIndexes.keySet()) {
       Map<Integer, Double> termWeights = new HashMap<>();
 
-      int totalDocuments = queryIndexes.size();
-      double idf = Math.log((double) totalDocuments / queryIndexes.get(term).size());
+      int documentsWithTerm = queryIndexes.get(term).size();
+      double idf = Math.log((double) totalDocuments / (documentsWithTerm + 1));
 
       for (Map.Entry<Integer, List<List<Integer>>> entry : queryIndexes.get(term).entrySet()) {
         int docId = entry.getKey();
-        double tf = entry.getValue().size();
+        double tf = calculateTf(entry.getValue().size(), docId);
         termWeights.put(docId, tf * idf);
       }
 
@@ -56,55 +60,55 @@ public class VectorSpaceModel implements SearchModel {
     }
   }
 
-  private Map<Integer, Double> calculateCosineSimilarity(Map<String, Map<Integer, List<List<Integer>>>> queryIndexes, List<String> query) {
-    Map<Integer, Double> documentScores = new HashMap<>();
+  private double calculateTf(int termFrequency, int docId) {
+    double totalWordsInDoc = getTotalWordsInDocument(docId);
+    return termFrequency / totalWordsInDoc;
+  }
 
-    int totalTermsInCollection = 0;
-
-    BufferedReader reader;
-    try {
-      reader = new BufferedReader(new FileReader(INDEX_FILE_PATH));
-      while (reader.readLine() != null)
-        totalTermsInCollection++;
-      reader.close();
-    } catch (Exception e) {
+  private double getTotalWordsInDocument(int docId) {
+    int i = 0;
+    try (BufferedReader br = new BufferedReader(new FileReader(PATH_FILE))) {
+      String line;
+      while ((line = br.readLine()) != null) {
+        if (i == docId) {
+          return (double) Integer.valueOf(line.split(" => ")[1]);
+        }
+        i++;
+      }
+    } catch (IOException e) {
       e.printStackTrace();
     }
+    return 1.0;
+  }
+
+  private Map<Integer, Double> calculateCosineSimilarity(Map<String, Map<Integer, List<List<Integer>>>> queryIndexes,
+      List<String> query) {
+    Map<Integer, Double> documentScores = new HashMap<>();
+    Map<Integer, Double> documentLengths = new HashMap<>();
 
     for (String term : query) {
-      if (!tfIdfWeights.containsKey(term)) continue;
+      if (!tfIdfWeights.containsKey(term))
+        continue;
 
       Map<Integer, Double> termWeights = tfIdfWeights.get(term);
+
       for (Map.Entry<Integer, Double> entry : termWeights.entrySet()) {
         int docId = entry.getKey();
-        double docScore = documentScores.getOrDefault(docId, 0.0) + entry.getValue();
-        documentScores.put(docId, docScore);
+        double weight = entry.getValue();
+
+        documentScores.put(docId, documentScores.getOrDefault(docId, 0.0) + weight);
+        documentLengths.put(docId, documentLengths.getOrDefault(docId, 0.0) + weight * weight);
       }
     }
 
     for (Map.Entry<Integer, Double> entry : documentScores.entrySet()) {
       int docId = entry.getKey();
-      double docLength = Math.sqrt(calculateDocumentLength(docId, queryIndexes, totalTermsInCollection));
-      
-      entry.setValue(entry.getValue() / docLength);
+      double score = entry.getValue();
+      double length = Math.sqrt(documentLengths.get(docId));
+      documentScores.put(docId, score / length);
     }
 
     return documentScores;
-  }
-
-  private double calculateDocumentLength(int docId, Map<String, Map<Integer, List<List<Integer>>>> queryIndexes,
-      int totalTermsInCollection) {
-    double docLength = 0.0;
-
-    for (String term : queryIndexes.keySet()) {
-      if (queryIndexes.get(term).containsKey(docId)) {
-        double termFrequency = queryIndexes.get(term).get(docId).size();
-        double idf = Math.log((double) totalTermsInCollection / queryIndexes.get(term).size());
-        docLength += Math.pow(termFrequency * idf, 2);
-      }
-    }
-
-    return docLength;
   }
 
   private String getDocumentNameFromDocumentId(int docID) {
@@ -114,7 +118,7 @@ public class VectorSpaceModel implements SearchModel {
       String line;
       while ((line = br.readLine()) != null) {
         if (i == docID) {
-          return line;
+          return line.split(" => ")[0];
         }
         i++;
       }
@@ -127,7 +131,7 @@ public class VectorSpaceModel implements SearchModel {
 
   @Override
   public int getWordDistance(List<Integer> firstWordPosition, List<Integer> secondWordPosition) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'getWordDistance'");
+    // Placeholder method, not used in Vector Space Model
+    return 0;
   }
 }
