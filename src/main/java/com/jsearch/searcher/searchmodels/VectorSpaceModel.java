@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class VectorSpaceModel implements SearchModel {
 
@@ -12,7 +11,8 @@ public class VectorSpaceModel implements SearchModel {
 
   @Override
   public List<String> performSearch(Map<String, Map<Integer, List<List<Integer>>>> queryIndexes, List<String> query) {
-    computeTfIdfWeights(queryIndexes);
+    Map<String, Double> keywordBoosts = getKeywordBoosts(query, queryIndexes);
+    computeTfIdfWeights(queryIndexes, query, keywordBoosts);
 
     Map<Integer, Double> documentScores = calculateCosineSimilarity(queryIndexes, query);
 
@@ -37,32 +37,44 @@ public class VectorSpaceModel implements SearchModel {
     return searchResults;
   }
 
-  private void computeTfIdfWeights(Map<String, Map<Integer, List<List<Integer>>>> queryIndexes) {
+  private void computeTfIdfWeights(Map<String, Map<Integer, List<List<Integer>>>> queryIndexes, List<String> query,
+      Map<String, Double> keywordBoosts) {
     tfIdfWeights = new HashMap<>();
 
-    int totalDocuments = queryIndexes.values().stream()
-        .flatMap(map -> map.keySet().stream())
-        .collect(Collectors.toSet()).size();
+    int totalDocuments = getTotalNumberOfDocuments();
 
-    for (String term : queryIndexes.keySet()) {
+    for (String term : query) {
+      if (!queryIndexes.containsKey(term))
+        continue;
+
       Map<Integer, Double> termWeights = new HashMap<>();
 
       int documentsWithTerm = queryIndexes.get(term).size();
       double idf = Math.log((double) totalDocuments / (documentsWithTerm + 1));
 
+      double boost = keywordBoosts.getOrDefault(term, 1.0);
       for (Map.Entry<Integer, List<List<Integer>>> entry : queryIndexes.get(term).entrySet()) {
         int docId = entry.getKey();
-        double tf = calculateTf(entry.getValue().size(), docId);
-        termWeights.put(docId, tf * idf);
+        double tf = calculateTf(entry.getValue().size(), getTotalWordsInDocument(docId));
+        termWeights.put(docId, tf * idf * boost);
       }
 
       tfIdfWeights.put(term, termWeights);
     }
   }
 
-  private double calculateTf(int termFrequency, int docId) {
-    double totalWordsInDoc = getTotalWordsInDocument(docId);
-    return termFrequency / totalWordsInDoc;
+  private int getTotalNumberOfDocuments() {
+    try (BufferedReader br = new BufferedReader(new FileReader(INDEX_FILE_PATH))) {
+      return (int) br.lines().count();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    return 0;
+  }
+
+  private double calculateTf(int termFrequency, double totalWordsInDocument) {
+    return termFrequency > 0 ? (1 + Math.log(termFrequency)) / totalWordsInDocument : 0;
   }
 
   private double getTotalWordsInDocument(int docId) {
@@ -71,7 +83,7 @@ public class VectorSpaceModel implements SearchModel {
       String line;
       while ((line = br.readLine()) != null) {
         if (i == docId) {
-          return (double) Integer.valueOf(line.split(" => ")[1]);
+          return Double.parseDouble(line.split(" => ")[1]);
         }
         i++;
       }
@@ -127,6 +139,42 @@ public class VectorSpaceModel implements SearchModel {
     }
 
     return null;
+  }
+
+  private Map<String, Double> getKeywordBoosts(List<String> query,
+      Map<String, Map<Integer, List<List<Integer>>>> queryIndexes) {
+    Map<String, Double> keywordBoosts = new HashMap<>();
+    Map<String, Integer> keywordFoundInDifferentFilesCount = new HashMap<>();
+    Map<String, Integer> totalOccurrenceOfWord = new HashMap<>();
+
+    for (String term : query) {
+      if (queryIndexes.containsKey(term)) {
+        keywordFoundInDifferentFilesCount.put(term, queryIndexes.get(term).size());
+      }
+    }
+
+    for (String term : query) {
+      if (queryIndexes.containsKey(term)) {
+        int totalOccurrence = 0;
+        for (Map.Entry<Integer, List<List<Integer>>> entry : queryIndexes.get(term).entrySet()) {
+          totalOccurrence += entry.getValue().size();
+        }
+        totalOccurrenceOfWord.put(term, totalOccurrence);
+      }
+    }
+
+    for (String term : query) {
+      int docCount = keywordFoundInDifferentFilesCount.getOrDefault(term, 0);
+      int totalOccurrence = totalOccurrenceOfWord.getOrDefault(term, 0);
+
+      double boost = 1.0;
+      if (docCount > 0 && totalOccurrence > 0) {
+        boost = Math.log((double) totalOccurrence / docCount) + 1;
+      }
+      keywordBoosts.put(term, boost);
+    }
+
+    return keywordBoosts;
   }
 
   @Override
