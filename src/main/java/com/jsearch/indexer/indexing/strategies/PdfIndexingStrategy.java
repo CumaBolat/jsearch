@@ -6,6 +6,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import java.io.File;
 
 import com.jsearch.indexer.indexing.FileIndexer;
+import com.jsearch.indexer.stopwords.StopWords;
 
 public class PdfIndexingStrategy extends FileIndexer {
   @Override
@@ -21,12 +22,20 @@ public class PdfIndexingStrategy extends FileIndexer {
       for (int i = 0; i < text.length; i++) {
         String[] words = text[i].split(" ");
         if (words.length == 0 || words[0].equals("")) continue;
-
+        int rowNumber = 0;
         for (int j = 0; j < words.length; j++) {
           String word = words[j];
+          rowNumber++;
 
-          addWordToIndex(word, file.toPath().toString(), i, j);
+          if (StopWords.isStopWord(word)) {
+            System.out.println("Stop word found: " + word);
+            rowNumber--;
+            continue;
+          }
+
+          addWordToIndex(word, file.toPath().toString(), i, rowNumber);
         }
+        rowNumber = 0;
       }
     } catch (Exception e) {
       e.printStackTrace();

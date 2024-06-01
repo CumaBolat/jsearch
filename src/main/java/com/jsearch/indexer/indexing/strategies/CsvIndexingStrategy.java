@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import com.jsearch.indexer.indexing.FileIndexer;
+import com.jsearch.indexer.stopwords.StopWords;
 
 public class CsvIndexingStrategy extends FileIndexer {
 
@@ -27,11 +28,18 @@ public class CsvIndexingStrategy extends FileIndexer {
         String[] cells = line.split(",");
         for (int i = 0; i < cells.length; i++) {
           String[] words = cells[i].split(" ");
+          int rowNumber = 0;
           for (int j = 0; j < words.length; j++) {
             String word = words[j];
 
+            if (StopWords.isStopWord(word)) {
+              rowNumber--;
+              continue;
+            }
+
             addWordToIndex(word, filePath, lineNumber, i);
           }
+          rowNumber = 0;
         }
       }
     } catch (IOException e) {

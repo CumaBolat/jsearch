@@ -6,8 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.jsearch.indexer.stopwords.StopWords;
 import com.jsearch.lemmatizer.Lemmatize;
 import com.jsearch.searcher.searchmodels.*;
+import com.jsearch.summarizer.Summarizer;
 
 public class Searcher {
   public final String ANSI_RESET = "\u001B[0m";
@@ -18,21 +20,30 @@ public class Searcher {
   private List<SearchModel> searchModels = Arrays.asList(new BooleanModel(), new VectorSpaceModel());
 
   private Map<String, Map<Integer, List<List<Integer>>>> queryIndexes = new HashMap<>();
+
+  private String initialQuery = "";
   
   public boolean search(String searchQuery) {
     if (!queryIsValid(searchQuery)) return false;
+    this.initialQuery = searchQuery;
 
+    searchQuery = removeStopWords(searchQuery);
     lemmatizeQuery(searchQuery);
     initializeQueryIndexMap();
 
     List<List<String>> searchResults = this.fetchSearchResults();
 
     printSearchResults(searchResults);
+    printSearchAnswer(searchResults);
     return true;
   }
 
   private boolean queryIsValid(String searchQuery) {
     return searchQuery.matches(".*\\w.*");
+  }
+
+  private String removeStopWords(String searchQuery) {
+    return StopWords.removeStopWords(searchQuery);
   }
 
   private void lemmatizeQuery(String searchQuery) {
@@ -66,7 +77,7 @@ public class Searcher {
     
     for (int i = 0; i < searchResults.size(); i++) {
       for (int j = 0; j < searchResults.get(i).size(); j++) {
-        String result = "•" + ANSI_CYAN + searchResults.get(i).get(j).split(" ---- ")[0] + " " + ANSI_RESET;
+        String result = "•" + ANSI_CYAN + removeModelNameFromPath(searchResults.get(i).get(j)) + " " + ANSI_RESET;
         String model;
         try {
           model = ANSI_BLUE + searchResults.get(i).get(j).split(" ---- ")[1] + ANSI_RESET;
@@ -76,6 +87,17 @@ public class Searcher {
         System.out.println(result + model);
       }
     }
+  }
+
+  private void printSearchAnswer(List<List<String>> searchResults) {
+    Summarizer summarizer = new Summarizer();
+
+
+
+  }
+
+  private String removeModelNameFromPath(String path) {
+    return path.split(" ---- ")[0];
   }
 }
 

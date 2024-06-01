@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import com.jsearch.crawler.FileCrawler;
 import com.jsearch.searcher.Searcher;
 import com.jsearch.indexer.dictionary.Dictionary;
+import com.jsearch.indexer.stopwords.StopWords;
 
 public class App {
 
@@ -39,9 +40,11 @@ public class App {
       getSearchDirectoryFromUser();
       getIgnoredDirectoriesFromUser();
       initializeDictionary();
+      initializeStopWords();
       startFileCrawling();
       scanner.nextLine();
     } else {
+      initializeStopWords();
       System.out.println("An index file has been found.");
     }
 
@@ -95,6 +98,10 @@ public class App {
 
   private static void initializeDictionary() {
     Dictionary dictionary = new Dictionary();
+  }
+
+  private static void initializeStopWords() {
+    StopWords stopWords = new StopWords();
   }
 
   private static void startFileCrawling() {
